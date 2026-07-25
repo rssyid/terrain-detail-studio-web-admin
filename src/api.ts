@@ -257,3 +257,19 @@ export async function fetchAuditLogs(): Promise<AuditLogItem[]> {
 
   return [];
 }
+
+export async function fetchAdminLicenses(): Promise<Array<{ email: string; plan: string; maxDevices: number; status: string; expires: string }>> {
+  try {
+    const res = await fetch(`${API_BASE}/admin/licenses`, {
+      headers: { 'X-Admin-API-Key': ADMIN_API_KEY },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data.licenses) && data.licenses.length > 0) {
+        return data.licenses;
+      }
+    }
+  } catch (e) {}
+
+  return [];
+}

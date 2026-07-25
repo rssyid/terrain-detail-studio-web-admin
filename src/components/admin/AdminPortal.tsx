@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { DeviceRecord, PresetItem, PluginRelease, AuditLogItem, AdminMetrics } from '../../types';
-import { createAdminLicense, resetDeviceAdmin, fetchAuditLogs, fetchAdminMetrics } from '../../api';
+import { createAdminLicense, resetDeviceAdmin, fetchAuditLogs, fetchAdminMetrics, fetchAdminLicenses } from '../../api';
 import { ShieldCheck, Users, Key, RotateCcw, Upload, FileText, CheckCircle, AlertOctagon, Plus, Search, Terminal, Activity } from 'lucide-react';
 
 interface AdminPortalProps {
@@ -40,15 +40,24 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   // Audit Logs state
   const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([]);
 
-  useEffect(() => {
+  const reloadAllData = () => {
     fetchAdminMetrics().then((m) => {
       if (m) setMetrics(m);
+    });
+    fetchAdminLicenses().then((lics) => {
+      if (lics && lics.length > 0) {
+        setLicensesList(lics);
+      }
     });
     fetchAuditLogs().then((logs) => {
       if (logs && logs.length > 0) {
         setAuditLogs(logs);
       }
     });
+  };
+
+  useEffect(() => {
+    reloadAllData();
   }, []);
 
   const handleCreateLicense = async (e: React.FormEvent) => {
@@ -58,19 +67,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     if (ok) {
       setLicenseMsg(`✅ License successfully created for ${newUserEmail}!`);
       
-      // Add to dynamic licenses list
-      setLicensesList((prev) => [
-        {
-          email: newUserEmail,
-          plan: newPlanCode,
-          maxDevices: maxDevices,
-          status: 'ACTIVE',
-          expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        },
-        ...prev.filter(l => l.email !== newUserEmail),
-      ]);
-
       setNewUserEmail('');
+      reloadAllData();
       onRefresh();
       // add audit log
       setAuditLogs((prev) => [
