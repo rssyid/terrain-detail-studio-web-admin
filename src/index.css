@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .btn-brutal {
+    @apply border-3 border-black font-mono font-bold uppercase tracking-wider px-4 py-2 bg-white text-black shadow-brutal transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-brutal-lg active:translate-x-1 active:translate-y-1 active:shadow-none disabled:opacity-50 disabled:pointer-events-none;
+  }
+  
+  .btn-brutal-yellow {
+    @apply btn-brutal bg-brutal-yellow text-black;
+  }
+
+  .btn-brutal-pink {
+    @apply btn-brutal bg-brutal-pink text-white;
+  }
+
+  .btn-brutal-cyan {
+    @apply btn-brutal bg-brutal-cyan text-black;
+  }
+
+  .btn-brutal-green {
+    @apply btn-brutal bg-brutal-green text-black;
+  }
+
+  .card-brutal {
+    @apply border-3 border-black bg-white shadow-brutal p-5 rounded-none;
+  }
+
+  .card-brutal-dark {
+    @apply border-3 border-white bg-brutal-darkCard text-white shadow-brutal-white p-5 rounded-none;
+  }
+
+  .badge-brutal {
+    @apply inline-flex items-center px-2.5 py-0.5 text-xs font-mono font-bold uppercase border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)];
+  }
+
+  .input-brutal {
+    @apply border-3 border-black font-mono bg-white px-3 py-2 text-black shadow-brutal-sm focus:outline-none focus:ring-2 focus:ring-brutal-pink;
+  }
+}
+
+/* Custom Scrollbar for Neo-Brutalist vibe */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F4F0EA;
+  border-left: 2px solid #000;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #FFE600;
+  border: 2px solid #000;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #FF007A;
+}
