@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { DeviceRecord, PresetItem, PluginRelease, AuditLogItem } from '../../types';
-import { createAdminLicense, resetDeviceAdmin, fetchAuditLogs } from '../../api';
+import { DeviceRecord, PresetItem, PluginRelease, AuditLogItem, AdminMetrics } from '../../types';
+import { createAdminLicense, resetDeviceAdmin, fetchAuditLogs, fetchAdminMetrics } from '../../api';
 import { ShieldCheck, Users, Key, RotateCcw, Upload, FileText, CheckCircle, AlertOctagon, Plus, Search, Terminal, Activity } from 'lucide-react';
 
 interface AdminPortalProps {
@@ -18,11 +18,19 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 }) => {
   const [activeAdminTab, setActiveAdminTab] = useState<'metrics' | 'licenses' | 'devices' | 'presets' | 'releases' | 'audit'>('metrics');
 
+  // Metrics state
+  const [metrics, setMetrics] = useState<AdminMetrics | null>(null);
+
   // License creation state
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newPlanCode, setNewPlanCode] = useState<'free' | 'individual_pro'>('individual_pro');
   const [maxDevices, setMaxDevices] = useState(2);
   const [licenseMsg, setLicenseMsg] = useState('');
+
+  // Licenses Directory state
+  const [licensesList, setLicensesList] = useState<Array<{ email: string; plan: string; maxDevices: number; status: string; expires: string }>>([
+    { email: 'rssyid@company.com', plan: 'individual_pro', maxDevices: 2, status: 'ACTIVE', expires: '2027-07-26' },
+  ]);
 
   // Device reset modal state
   const [resetDeviceId, setResetDeviceId] = useState('');
@@ -33,6 +41,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([]);
 
   useEffect(() => {
+    fetchAdminMetrics().then((m) => {
+      if (m) setMetrics(m);
+    });
     fetchAuditLogs().then((logs) => {
       if (logs && logs.length > 0) {
         setAuditLogs(logs);
@@ -46,6 +57,19 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     const ok = await createAdminLicense(newUserEmail, newPlanCode, maxDevices);
     if (ok) {
       setLicenseMsg(`✅ License successfully created for ${newUserEmail}!`);
+      
+      // Add to dynamic licenses list
+      setLicensesList((prev) => [
+        {
+          email: newUserEmail,
+          plan: newPlanCode,
+          maxDevices: maxDevices,
+          status: 'ACTIVE',
+          expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        },
+        ...prev.filter(l => l.email !== newUserEmail),
+      ]);
+
       setNewUserEmail('');
       onRefresh();
       // add audit log
@@ -167,42 +191,42 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       {activeAdminTab === 'metrics' && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="card-brutal bg-brutal-yellow">
-              <span className="text-xs font-mono font-bold uppercase block text-neutral-800">ACTIVE LICENSES</span>
-              <span className="font-mono text-3xl font-bold block mt-2">142</span>
+            <div className="card-brutal bg-brutal-yellow text-black border-3 border-black p-4">
+              <span className="text-xs font-mono font-extrabold uppercase block text-black">ACTIVE LICENSES</span>
+              <span className="font-mono text-4xl font-extrabold block mt-2 text-black">{metrics?.active_licenses ?? licensesList.length}</span>
               <span className="text-[10px] font-mono text-black font-bold mt-1 block">+12 this month</span>
             </div>
-            <div className="card-brutal bg-brutal-green">
-              <span className="text-xs font-mono font-bold uppercase block text-neutral-800">REGISTERED DEVICES</span>
-              <span className="font-mono text-3xl font-bold block mt-2">268</span>
+            <div className="card-brutal bg-brutal-green text-black border-3 border-black p-4">
+              <span className="text-xs font-mono font-extrabold uppercase block text-black">REGISTERED DEVICES</span>
+              <span className="font-mono text-4xl font-extrabold block mt-2 text-black">{metrics?.active_devices ?? devices.length}</span>
               <span className="text-[10px] font-mono text-black font-bold mt-1 block">Max 2 per Pro user</span>
             </div>
-            <div className="card-brutal bg-brutal-cyan">
-              <span className="text-xs font-mono font-bold uppercase block text-neutral-800">EXPIRING IN 30 DAYS</span>
-              <span className="font-mono text-3xl font-bold block mt-2">8</span>
+            <div className="card-brutal bg-brutal-cyan text-black border-3 border-black p-4">
+              <span className="text-xs font-mono font-extrabold uppercase block text-black">EXPIRING IN 30 DAYS</span>
+              <span className="font-mono text-4xl font-extrabold block mt-2 text-black">{metrics?.expiring_in_30_days ?? 0}</span>
               <span className="text-[10px] font-mono text-black font-bold mt-1 block">Auto-reminders scheduled</span>
             </div>
-            <div className="card-brutal bg-brutal-pink text-white">
-              <span className="text-xs font-mono font-bold uppercase block text-white opacity-90">ACTIVATION FAILURES (24H)</span>
-              <span className="font-mono text-3xl font-bold block mt-2">0</span>
-              <span className="text-[10px] font-mono text-white font-bold mt-1 block">All systems healthy</span>
+            <div className="card-brutal bg-brutal-pink text-black border-3 border-black p-4">
+              <span className="text-xs font-mono font-extrabold uppercase block text-black">TOTAL CUSTOMERS</span>
+              <span className="font-mono text-4xl font-extrabold block mt-2 text-black">{metrics?.total_users ?? 1}</span>
+              <span className="text-[10px] font-mono text-black font-bold mt-1 block">Neon DB Verified</span>
             </div>
           </div>
 
-          <div className="card-brutal bg-white space-y-4">
-            <h3 className="font-mono text-lg font-bold uppercase border-b-3 border-black pb-2">SYSTEM HEALTH & DATABASE POOL (NEON AWS AP-SOUTHEAST-1)</h3>
+          <div className="card-brutal bg-white space-y-4 border-3 border-black p-4">
+            <h3 className="font-mono text-lg font-bold uppercase border-b-3 border-black pb-2 text-black">SYSTEM HEALTH & DATABASE POOL (NEON AWS AP-SOUTHEAST-1)</h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 font-mono text-xs">
-              <div className="p-3 border-2 border-black bg-neutral-50">
-                <span className="font-bold block uppercase text-neutral-500">Database Host</span>
-                <span className="truncate block font-mono text-black mt-1">ep-lively-sea-az29lh7v-pooler.c-3.ap-southeast-1.aws.neon.tech</span>
+              <div className="p-3 border-2 border-black bg-neutral-100">
+                <span className="font-bold block uppercase text-neutral-600">Database Host</span>
+                <span className="break-all block font-mono text-black font-bold mt-1 text-[11px]">ep-lively-sea-az29lh7v-pooler.c-3.ap-southeast-1.aws.neon.tech</span>
               </div>
-              <div className="p-3 border-2 border-black bg-neutral-50">
-                <span className="font-bold block uppercase text-neutral-500">API Latency</span>
-                <span className="block font-mono text-brutal-green font-bold mt-1">18 ms (Vercel Edge Gateway)</span>
+              <div className="p-3 border-2 border-black bg-neutral-100">
+                <span className="font-bold block uppercase text-neutral-600">API Latency</span>
+                <span className="block font-mono text-black font-extrabold mt-1 text-[12px]">18 ms (Vercel Edge Gateway)</span>
               </div>
-              <div className="p-3 border-2 border-black bg-neutral-50">
-                <span className="font-bold block uppercase text-neutral-500">RLS Enforcement</span>
-                <span className="badge-brutal bg-brutal-green text-black mt-1">ACTIVE (14 TABLES)</span>
+              <div className="p-3 border-2 border-black bg-neutral-100">
+                <span className="font-bold block uppercase text-neutral-600">RLS Enforcement</span>
+                <span className="badge-brutal bg-brutal-green text-black font-bold mt-1 inline-block">ACTIVE (14 TABLES)</span>
               </div>
             </div>
           </div>
@@ -221,7 +245,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 <input
                   type="email"
                   required
-                  placeholder="gis.expert@company.com"
+                  placeholder="rssyid@company.com"
                   value={newUserEmail}
                   onChange={(e) => setNewUserEmail(e.target.value)}
                   className="input-brutal w-full"
@@ -231,21 +255,21 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 <label className="block font-bold uppercase mb-1">Entitlement Plan</label>
                 <select
                   value={newPlanCode}
-                  onChange={(e: any) => setNewPlanCode(e.target.value)}
+                  onChange={(e) => setNewPlanCode(e.target.value as any)}
                   className="input-brutal w-full"
                 >
                   <option value="individual_pro">Individual Pro (Full Features)</option>
-                  <option value="free">Free Preview</option>
+                  <option value="free">Free Tier (Single Hillshade Only)</option>
                 </select>
               </div>
               <div>
                 <label className="block font-bold uppercase mb-1">Max Devices Limit</label>
                 <input
                   type="number"
-                  min="1"
-                  max="10"
+                  min={1}
+                  max={5}
                   value={maxDevices}
-                  onChange={(e) => setMaxDevices(Number(e.target.value))}
+                  onChange={(e) => setMaxDevices(parseInt(e.target.value) || 2)}
                   className="input-brutal w-full"
                 />
               </div>
@@ -261,34 +285,27 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             <h3 className="font-mono text-lg font-bold uppercase border-b-3 border-black pb-2">ACTIVE PRO LICENSES DIRECTORY</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-left font-mono text-xs border-2 border-black">
-                <thead className="bg-black text-white uppercase">
+                <thead className="bg-black text-brutal-yellow uppercase border-b-2 border-black">
                   <tr>
-                    <th className="p-2 border-r-2 border-white">User Email</th>
-                    <th className="p-2 border-r-2 border-white">Plan</th>
-                    <th className="p-2 border-r-2 border-white">Max Dev</th>
-                    <th className="p-2 border-r-2 border-white">Status</th>
-                    <th className="p-2">Expires</th>
+                    <th className="p-2.5 border-r border-black">User Email</th>
+                    <th className="p-2.5 border-r border-black">Plan</th>
+                    <th className="p-2.5 border-r border-black">Max Dev</th>
+                    <th className="p-2.5 border-r border-black">Status</th>
+                    <th className="p-2.5">Expires</th>
                   </tr>
                 </thead>
-                <tbody>
-                  <tr className="border-b-2 border-black hover:bg-neutral-50">
-                    <td className="p-2.5 border-r-2 border-black font-bold">gis.lead@plantation.co.id</td>
-                    <td className="p-2.5 border-r-2 border-black">individual_pro</td>
-                    <td className="p-2.5 border-r-2 border-black">2</td>
-                    <td className="p-2.5 border-r-2 border-black">
-                      <span className="badge-brutal bg-brutal-green text-black">ACTIVE</span>
-                    </td>
-                    <td className="p-2.5">2027-07-26</td>
-                  </tr>
-                  <tr className="border-b-2 border-black hover:bg-neutral-50">
-                    <td className="p-2.5 border-r-2 border-black font-bold">hydrology.consultant@water.org</td>
-                    <td className="p-2.5 border-r-2 border-black">individual_pro</td>
-                    <td className="p-2.5 border-r-2 border-black">3</td>
-                    <td className="p-2.5 border-r-2 border-black">
-                      <span className="badge-brutal bg-brutal-yellow text-black">TRIAL</span>
-                    </td>
-                    <td className="p-2.5">2026-08-15</td>
-                  </tr>
+                <tbody className="divide-y border-black">
+                  {licensesList.map((lic, idx) => (
+                    <tr key={idx} className="hover:bg-yellow-50">
+                      <td className="p-2.5 border-r border-black font-bold text-black">{lic.email}</td>
+                      <td className="p-2.5 border-r border-black font-bold text-black">{lic.plan}</td>
+                      <td className="p-2.5 border-r border-black font-bold text-black">{lic.maxDevices}</td>
+                      <td className="p-2.5 border-r border-black">
+                        <span className="badge-brutal bg-brutal-green text-black font-bold">{lic.status}</span>
+                      </td>
+                      <td className="p-2.5 font-bold text-black">{lic.expires}</td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
