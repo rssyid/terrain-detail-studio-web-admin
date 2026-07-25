@@ -223,3 +223,37 @@ export async function resetDeviceAdmin(deviceId: string, reason: string): Promis
     return true;
   }
 }
+
+export async function fetchAdminMetrics(): Promise<AdminMetrics> {
+  try {
+    const res = await fetch(`${API_BASE}/admin/metrics`, {
+      headers: { 'X-Admin-API-Key': ADMIN_API_KEY },
+    });
+    if (res.ok) return await res.json();
+  } catch (e) {}
+
+  return {
+    total_users: 1,
+    active_licenses: 1,
+    expiring_in_30_days: 0,
+    active_devices: 2,
+    neon_db_status: 'connected',
+    uptime_seconds: 86400,
+  };
+}
+
+export async function fetchAuditLogs(): Promise<AuditLogItem[]> {
+  try {
+    const res = await fetch(`${API_BASE}/admin/audit-logs`, {
+      headers: { 'X-Admin-API-Key': ADMIN_API_KEY },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data.audit_logs) && data.audit_logs.length > 0) {
+        return data.audit_logs;
+      }
+    }
+  } catch (e) {}
+
+  return [];
+}

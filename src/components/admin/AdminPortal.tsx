@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { DeviceRecord, PresetItem, PluginRelease, AuditLogItem } from '../../types';
-import { createAdminLicense, resetDeviceAdmin } from '../../api';
+import { createAdminLicense, resetDeviceAdmin, fetchAuditLogs } from '../../api';
 import { ShieldCheck, Users, Key, RotateCcw, Upload, FileText, CheckCircle, AlertOctagon, Plus, Search, Terminal, Activity } from 'lucide-react';
 
 interface AdminPortalProps {
@@ -29,39 +29,16 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [resetReason, setResetReason] = useState('');
   const [resetMsg, setResetMsg] = useState('');
 
-  // Audit Logs Mock state
-  const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([
-    {
-      id: 'aud_9921',
-      actor_user_id: 'admin_sys_01',
-      action: 'REGISTER_RELEASE',
-      target_type: 'RELEASE',
-      target_id: 'rel_1.0.0',
-      ip_hash: 'e3b0c442...',
-      metadata: { version: '1.0.0', download_url: release.download_url },
-      created_at: new Date(Date.now() - 3600000).toISOString(),
-    },
-    {
-      id: 'aud_8812',
-      actor_user_id: 'admin_sys_01',
-      action: 'PUBLISH_PRESET',
-      target_type: 'PRESET',
-      target_id: 'preset_balanced-detail_1.0.0',
-      ip_hash: 'a1f893c2...',
-      metadata: { code: 'balanced-detail', version: '1.0.0' },
-      created_at: new Date(Date.now() - 7200000).toISOString(),
-    },
-    {
-      id: 'aud_7701',
-      actor_user_id: 'support_agent_02',
-      action: 'RESET_DEVICE',
-      target_type: 'DEVICE',
-      target_id: 'dev_441209',
-      ip_hash: 'f928c11a...',
-      metadata: { reason: 'User replaced stolen laptop', license_id: 'lic_88392109' },
-      created_at: new Date(Date.now() - 14400000).toISOString(),
-    },
-  ]);
+  // Audit Logs state
+  const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([]);
+
+  useEffect(() => {
+    fetchAuditLogs().then((logs) => {
+      if (logs && logs.length > 0) {
+        setAuditLogs(logs);
+      }
+    });
+  }, []);
 
   const handleCreateLicense = async (e: React.FormEvent) => {
     e.preventDefault();
