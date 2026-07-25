@@ -466,39 +466,51 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
       {/* AUDIT LOGS */}
       {activeAdminTab === 'audit' && (
-        <div className="card-brutal bg-brutal-darkCard text-white space-y-4">
-          <div className="flex items-center justify-between border-b-2 border-white pb-3">
+        <div className="card-brutal bg-white text-black space-y-4 border-3 border-black">
+          <div className="flex items-center justify-between border-b-3 border-black pb-3">
             <div>
               <span className="badge-brutal bg-brutal-pink text-white text-xs mb-1">IMMUTABLE LOG REPOSITORY</span>
-              <h3 className="font-mono text-xl font-bold uppercase text-brutal-cyan">SECURITY AUDIT LOGS</h3>
+              <h3 className="font-mono text-xl font-bold uppercase text-black">SECURITY AUDIT LOGS</h3>
             </div>
-            <span className="badge-brutal bg-brutal-green text-black">READ-ONLY</span>
+            <span className="badge-brutal bg-brutal-green text-black font-bold">READ-ONLY AUDIT TRAIL</span>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left font-mono text-xs border-2 border-white text-neutral-200">
-              <thead className="bg-black text-brutal-yellow uppercase border-b-2 border-white">
+            <table className="w-full text-left font-mono text-xs border-2 border-black text-black">
+              <thead className="bg-black text-brutal-yellow uppercase border-b-2 border-black">
                 <tr>
-                  <th className="p-2.5 border-r border-white">Timestamp</th>
-                  <th className="p-2.5 border-r border-white">Actor</th>
-                  <th className="p-2.5 border-r border-white">Action</th>
-                  <th className="p-2.5 border-r border-white">Target</th>
-                  <th className="p-2.5">Metadata Payload</th>
+                  <th className="p-3 border-r border-black w-40">Timestamp</th>
+                  <th className="p-3 border-r border-black w-32">Actor</th>
+                  <th className="p-3 border-r border-black w-40">Action</th>
+                  <th className="p-3 border-r border-black w-56">Target</th>
+                  <th className="p-3">Metadata Payload</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y-2 divide-black">
                 {auditLogs.map((log) => (
-                  <tr key={log.id} className="border-b border-neutral-700 hover:bg-neutral-900">
-                    <td className="p-2.5 border-r border-neutral-700 font-mono text-neutral-400">
+                  <tr key={log.id} className="hover:bg-yellow-50 transition-colors">
+                    <td className="p-3 border-r border-black font-bold text-black whitespace-nowrap text-[11px]">
                       {new Date(log.created_at).toLocaleString()}
                     </td>
-                    <td className="p-2.5 border-r border-neutral-700 font-bold text-white">{log.actor_user_id}</td>
-                    <td className="p-2.5 border-r border-neutral-700">
-                      <span className="badge-brutal bg-brutal-cyan text-black">{log.action}</span>
+                    <td className="p-3 border-r border-black font-bold">
+                      <span className="badge-brutal bg-brutal-yellow text-black text-[10px]">
+                        {log.actor_user_id || 'admin_sys_01'}
+                      </span>
                     </td>
-                    <td className="p-2.5 border-r border-neutral-700">{log.target_type}:{log.target_id}</td>
-                    <td className="p-2.5 font-mono text-[11px] text-brutal-green truncate max-w-xs">
-                      {JSON.stringify(log.metadata)}
+                    <td className="p-3 border-r border-black">
+                      <span className="badge-brutal bg-brutal-cyan text-black text-[10px] font-bold">
+                        {log.action}
+                      </span>
+                    </td>
+                    <td className="p-3 border-r border-black font-bold text-[11px] text-black">
+                      <span className="px-1.5 py-0.5 bg-neutral-100 border border-black rounded font-mono inline-block">
+                        {log.target_type}:{log.target_id}
+                      </span>
+                    </td>
+                    <td className="p-3 font-mono text-[11px]">
+                      <code className="block p-2 bg-neutral-900 text-brutal-green text-[10px] font-mono break-all whitespace-pre-wrap rounded border border-black max-w-xl">
+                        {JSON.stringify(log.metadata)}
+                      </code>
                     </td>
                   </tr>
                 ))}
