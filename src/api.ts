@@ -183,7 +183,7 @@ export async function fetchLatestRelease(): Promise<PluginRelease> {
     version: '1.0.0',
     min_qgis_version: '3.28.0',
     download_url: '/releases/terrain_detail_studio-1.0.0.zip',
-    sha256: '9a2ee35c2c49c768a13b663610e09db481d6b829b774aa47774df4d5321936f5',
+    sha256: 'ddfef9c80f374eb4c4fa09bc656ff2909bcaa7d3ca98dc7c0797a9249a53bcf1',
     release_notes: 'Initial v1.0.0 commercial release. Full local MDHS, Slope, and Gaussian LRM pipeline.',
     published_at: '2026-07-26T00:00:00Z',
   };
