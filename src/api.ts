@@ -196,14 +196,13 @@ export async function createAdminLicense(user_email: string, plan_code: string, 
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-Admin-API-Key': ADMIN_API_KEY,
       },
       body: JSON.stringify({ user_email, plan_code, max_devices }),
     });
-    return res.ok || true;
+    return res.ok;
   } catch (err) {
-    console.warn('Admin license creation fallback:', err);
-    return true;
+    console.error('Admin license creation error:', err);
+    return false;
   }
 }
 
@@ -213,22 +212,19 @@ export async function resetDeviceAdmin(deviceId: string, reason: string): Promis
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-Admin-API-Key': ADMIN_API_KEY,
       },
       body: JSON.stringify({ reason }),
     });
-    return res.ok || true;
+    return res.ok;
   } catch (err) {
-    console.warn('Admin device reset fallback:', err);
-    return true;
+    console.error('Admin device reset error:', err);
+    return false;
   }
 }
 
 export async function fetchAdminMetrics(): Promise<AdminMetrics> {
   try {
-    const res = await fetch(`${API_BASE}/admin/metrics`, {
-      headers: { 'X-Admin-API-Key': ADMIN_API_KEY },
-    });
+    const res = await fetch(`${API_BASE}/admin/metrics`);
     if (res.ok) return await res.json();
   } catch (e) {}
 
@@ -244,9 +240,7 @@ export async function fetchAdminMetrics(): Promise<AdminMetrics> {
 
 export async function fetchAuditLogs(): Promise<AuditLogItem[]> {
   try {
-    const res = await fetch(`${API_BASE}/admin/audit-logs`, {
-      headers: { 'X-Admin-API-Key': ADMIN_API_KEY },
-    });
+    const res = await fetch(`${API_BASE}/admin/audit-logs`);
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data.audit_logs) && data.audit_logs.length > 0) {
@@ -260,9 +254,7 @@ export async function fetchAuditLogs(): Promise<AuditLogItem[]> {
 
 export async function fetchAdminLicenses(): Promise<Array<{ email: string; plan: string; maxDevices: number; status: string; expires: string }>> {
   try {
-    const res = await fetch(`${API_BASE}/admin/licenses`, {
-      headers: { 'X-Admin-API-Key': ADMIN_API_KEY },
-    });
+    const res = await fetch(`${API_BASE}/admin/licenses`);
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data.licenses) && data.licenses.length > 0) {
