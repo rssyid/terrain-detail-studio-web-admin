@@ -63,30 +63,44 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const handleCreateLicense = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newUserEmail) return;
-    const ok = await createAdminLicense(newUserEmail, newPlanCode, maxDevices);
-    if (ok) {
-      setLicenseMsg(`✅ License successfully created for ${newUserEmail}!`);
-      
-      setNewUserEmail('');
+
+    const email = newUserEmail;
+    const plan = newPlanCode;
+    const devicesCount = maxDevices;
+
+    // Optimistically update license directory list immediately for instant UX feedback
+    const createdLicense = {
+      email: email,
+      plan: plan,
+      maxDevices: devicesCount,
+      status: 'ACTIVE',
+      expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    };
+
+    setLicensesList((prev) => [createdLicense, ...prev.filter(l => l.email !== email)]);
+    setLicenseMsg(`✅ License successfully issued for ${email}!`);
+    setNewUserEmail('');
+
+    // Persist to Neon DB in background
+    createAdminLicense(email, plan, devicesCount).then(() => {
       reloadAllData();
       onRefresh();
-      // add audit log
-      setAuditLogs((prev) => [
-        {
-          id: `aud_${Date.now()}`,
-          actor_user_id: 'admin_sys_01',
-          action: 'CREATE_LICENSE',
-          target_type: 'LICENSE',
-          target_id: `lic_${Date.now()}`,
-          ip_hash: '127.0.0.1_hash',
-          metadata: { user_email: newUserEmail, plan_code: newPlanCode, max_devices: maxDevices },
-          created_at: new Date().toISOString(),
-        },
-        ...prev,
-      ]);
-    } else {
-      setLicenseMsg('❌ Failed to create license');
-    }
+    });
+
+    // Add audit log
+    setAuditLogs((prev) => [
+      {
+        id: `aud_${Date.now()}`,
+        actor_user_id: 'admin_sys_01',
+        action: 'CREATE_LICENSE',
+        target_type: 'LICENSE',
+        target_id: `lic_${Date.now()}`,
+        ip_hash: '127.0.0.1_hash',
+        metadata: { user_email: email, plan_code: plan, max_devices: devicesCount },
+        created_at: new Date().toISOString(),
+      },
+      ...prev,
+    ]);
   };
 
   const handleResetDevice = async (e: React.FormEvent) => {
